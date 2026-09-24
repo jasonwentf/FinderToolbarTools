@@ -1,29 +1,34 @@
 # Finder Toolbar Tools
 
-两个可放进 Finder 工具栏的轻量 macOS App：
+给 Finder 工具栏加两个按钮：
 
-- **前往路径**：打开 Finder 原生的“前往文件夹”窗口（`⇧⌘G`）。
-- **上一级**：在 Finder 中返回父目录（`⌘↑`）。
+| 按钮 | 点击后 |
+| --- | --- |
+| 前往路径 | 打开系统自带的“前往文件夹”输入框，可以直接粘贴路径（`⇧⌘G`） |
+| 上一级 | 返回当前文件夹的父目录（`⌘↑`） |
 
-两个 App 都由同一份 Swift/AppKit 代码直接发送快捷键；不依赖 BetterTouchTool，也不常驻后台。它们只发送按键，不读取文件路径或剪贴板内容。首次使用需要在“系统设置 → 隐私与安全性 → 辅助功能”中允许对应 App 控制电脑。
+两个 App 都只向 Finder 发送快捷键，不调用 BetterTouchTool，也不常驻后台。路径输入框是 macOS 自带的；App 不读取剪贴板或文件内容。
 
-## 构建
+## 构建和安装
 
-需要 Xcode Command Line Tools。运行 `bash scripts/build.sh`，生成 `.build/前往路径.app` 与 `.build/上一级.app`。构建脚本会制作图标并对本地 App 做临时签名。临时签名的代码更新后，macOS 可能要求重新授予辅助功能权限。
+在 macOS 上安装 Xcode Command Line Tools，然后运行：
 
-## 安装与更新
+```sh
+bash scripts/build.sh
+```
 
-首次安装时，将生成的两个 App 复制到固定位置（例如 `~/Applications`），然后按住 Command，从该位置把 App 拖到 Finder 顶部工具栏。不要直接拖入 `.build/` 中的 App；下次构建会重建该目录。工具栏里的 App 没有运行时菜单或常驻进程。
+构建结果在 `.build/前往路径.app` 和 `.build/上一级.app`。把需要的 App 复制到固定位置，例如 `~/Applications`，再按住 Command，从那里拖进 Finder 工具栏。不要直接拖入 `.build/` 中的副本；重新构建时它们会被替换。
 
-第一次点击时，按提示分别给两个 App 开启辅助功能权限。更新已安装 App 前先备份；更新后如果开关显示开启却仍提示无权限，可在系统设置的辅助功能列表中仅移除该 App 的旧记录，再添加当前安装位置的 App。若保持安装路径不变，通常无需重新拖动工具栏按钮。
+首次点击时，macOS 会要求为各 App 开启辅助功能权限。系统设置的位置是“隐私与安全性 → 辅助功能”。这项权限用于向 Finder 发送按键。
 
-当前安装版固定使用不透明的白底黑图形，避免 Finder 窗口失焦时把透明区域显示成灰色颗粒。`icons/` 中的深色反色稿仅供设计参考，构建脚本不会安装它，也不做自动切换。更改已签名 App 包内图标资源后，必须重新签名；临时签名变化也可能需要重新授予辅助功能权限。
+更新已安装的 App 前先备份。更新后如果辅助功能开关仍显示开启，但按钮提示没有权限，可以只移除该 App 的旧记录，再从安装位置添加新版。改过图标或代码的 App 也需要重新签名；构建脚本使用临时签名。
 
-## 项目结构
+图标固定为白底黑图形。`icons/` 中的深色稿只是设计稿，目前不会自动切换。两个按钮已在 macOS 26.5.2 的 Finder 工具栏中实测。
 
-- `apps/GoToFolder/`：前往路径入口。
-- `apps/GoUp/`：上一级入口。
-- `Sources/ShortcutLauncher.swift`：共同的 Finder 定位、权限检查、快捷键发送与退出逻辑。
-- `scripts/build.sh`：构建两个 App。
+## 源码
 
-Finder 文件大小浮层是独立项目 `../FinderSizeOverlay/`，不属于本仓库的构建或部署流程。
+- `apps/`：两个 App 的入口和配置。
+- `Sources/ShortcutLauncher.swift`：查找 Finder、检查权限并发送按键。
+- `scripts/`：构建和图标生成脚本。
+
+本项目使用 [MIT 许可证](LICENSE)。
