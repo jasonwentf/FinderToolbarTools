@@ -18,12 +18,19 @@ let bitmap = NSBitmapImageRep(
     colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0
 )!
 bitmap.size = NSSize(width: 1024, height: 1024)
+// NSBitmapImageRep does not promise zeroed storage. Undefined RGB values under
+// transparent pixels become visible when Finder dims an inactive toolbar icon.
+memset(bitmap.bitmapData!, 0, bitmap.bytesPerRow * bitmap.pixelsHigh)
 NSGraphicsContext.saveGraphicsState()
 NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: bitmap)
 NSGraphicsContext.current?.imageInterpolation = .high
 
 let ink = appearance == "light" ? NSColor.black : NSColor.white
 let paper = appearance == "light" ? NSColor.white : NSColor.black
+// Finder's toolbar greys custom App icons when its window is inactive. Match
+// the existing Go Up icon's fully opaque canvas to avoid stippled alpha edges.
+paper.setFill()
+NSBezierPath(rect: NSRect(x: 0, y: 0, width: 1024, height: 1024)).fill()
 let background = NSBezierPath(roundedRect: NSRect(x: 72, y: 72, width: 880, height: 880), xRadius: 205, yRadius: 205)
 paper.setFill()
 background.fill()
